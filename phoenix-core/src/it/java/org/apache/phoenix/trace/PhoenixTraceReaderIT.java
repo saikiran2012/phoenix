@@ -23,7 +23,9 @@ import static org.junit.Assert.assertNull;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,14 +35,19 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.phoenix.end2end.HBaseManagedTimeTest;
+import org.apache.phoenix.jdbc.PhoenixConnection;
 import org.apache.phoenix.metrics.MetricInfo;
 import org.apache.phoenix.metrics.PhoenixAbstractMetric;
 import org.apache.phoenix.metrics.PhoenixMetricTag;
 import org.apache.phoenix.metrics.PhoenixMetricsRecord;
+import org.apache.phoenix.query.QueryServices;
 import org.apache.phoenix.trace.Hadoop1TracingTestEnabler.Hadoop1Disabled;
 import org.apache.phoenix.trace.TraceReader.SpanInfo;
 import org.apache.phoenix.trace.TraceReader.TraceHolder;
+import org.apache.phoenix.trace.util.Tracing;
+import org.apache.phoenix.util.PropertiesUtil;
 import org.cloudera.htrace.Span;
+import org.cloudera.htrace.TraceScope;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -141,6 +148,17 @@ public class PhoenixTraceReaderIT extends BaseTracingTestIT {
         validateTrace(records, trace);
     }
 
+	@Test
+	public void testClientTags() throws Exception {
+        PhoenixTableMetricsWriter sink = new PhoenixTableMetricsWriter();
+        PhoenixConnection conn = (PhoenixConnection) getTracingConnectionWithClienTags("hello;world");
+        sink.initForTesting(conn);
+        Span span = Tracing.startNewSpan(conn,"test span").getSpan();
+        Tracing.addClientTags(conn, span);
+        span.getTimelineAnnotations().containsAll(new ArrayList<String>(
+        	    Arrays.asList("hello", "world")));
+	}
+	
     /**
      * @param records
      * @param trace

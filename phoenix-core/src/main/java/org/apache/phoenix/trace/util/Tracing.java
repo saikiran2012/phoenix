@@ -17,6 +17,8 @@
  */
 package org.apache.phoenix.trace.util;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
@@ -299,4 +301,28 @@ public class Tracing {
         }
         initialized = true;
     }
+
+    /**
+     * Sets the client tags to the span for the specified connection
+     * @param connection for which custom tags are to be specified
+     */
+	public static void addClientTags(PhoenixConnection connection, Span span) {
+    	String clientTag = connection.getClientInfo(QueryServices.TRACING_CLIENT_TAGS);
+    	if (clientTag ==null ||clientTag.isEmpty()) {
+    		return;
+    	}
+    	for (String element : getElements(clientTag)) {
+    		span.addTimelineAnnotation(element);
+    	}		
+	}
+	    
+    private static String[] getElements(String clientTag) {
+    	final String regex = ";";
+    	if (!clientTag.contains(";")) {
+    		return new String[] {clientTag};
+    		}	
+    	return clientTag.split(regex);
+    }
+
+    
 }
