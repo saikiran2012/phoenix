@@ -32,6 +32,7 @@ import org.apache.phoenix.metrics.Metrics;
 import org.apache.phoenix.metrics.PhoenixAbstractMetric;
 import org.apache.phoenix.metrics.PhoenixMetricTag;
 import org.apache.phoenix.metrics.PhoenixMetricsRecord;
+import org.apache.phoenix.query.QueryServices;
 import org.apache.phoenix.query.QueryServicesOptions;
 import org.apache.phoenix.schema.TableNotFoundException;
 import org.apache.phoenix.trace.util.Tracing;
@@ -92,6 +93,12 @@ public class BaseTracingTestIT extends BaseHBaseManagedTimeIT {
         return getConnectionWithTracingFrequency(props, Tracing.Frequency.ALWAYS);
     }
 
+    public static Connection getTracingConnectionWithClienTags(String clientTags) throws Exception {
+        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+        props.put(QueryServices.TRACING_CLIENT_TAGS, clientTags);
+        return getConnectionWithTracingFrequency(props, Tracing.Frequency.ALWAYS);
+    }
+    
     public static Connection getConnectionWithTracingFrequency(Properties props,
             Tracing.Frequency frequency) throws SQLException {
         Tracing.setSampling(props, frequency);

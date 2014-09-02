@@ -312,16 +312,20 @@ public class Tracing {
     		return;
     	}
     	for (String element : getElements(clientTag)) {
-    		span.addTimelineAnnotation(element);
-    	}		
+    		String[] kv = element.split("=");
+    		if (kv.length != 2) {
+    			throw new IllegalArgumentException("Got a trace annotation element with incorrrect synatx! Element: " + element);
+    		}
+    		span.addKVAnnotation(kv[0].getBytes(), kv[1].getBytes());
+    	}
 	}
 	    
     private static String[] getElements(String clientTag) {
-    	final String regex = ";";
+    	final String delimiter = ";";
     	if (!clientTag.contains(";")) {
     		return new String[] {clientTag};
     		}	
-    	return clientTag.split(regex);
+    	return clientTag.split(delimiter);
     }
 
     

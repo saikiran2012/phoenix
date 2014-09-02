@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -150,13 +151,16 @@ public class PhoenixTraceReaderIT extends BaseTracingTestIT {
 
 	@Test
 	public void testClientTags() throws Exception {
+		String key = "hello";
+		String value = "world";
         PhoenixTableMetricsWriter sink = new PhoenixTableMetricsWriter();
-        PhoenixConnection conn = (PhoenixConnection) getTracingConnectionWithClienTags("hello;world");
+        PhoenixConnection conn = (PhoenixConnection) getTracingConnectionWithClienTags(key + "=" + value);
         sink.initForTesting(conn);
         Span span = Tracing.startNewSpan(conn,"test span").getSpan();
         Tracing.addClientTags(conn, span);
-        span.getTimelineAnnotations().containsAll(new ArrayList<String>(
-        	    Arrays.asList("hello", "world")));
+        Map<byte[], byte[]> spanTags = span.getKVAnnotations();
+        byte[] expectedValue = spanTags.get(key.getBytes());
+        assertEquals(expectedValue, value.getBytes());
 	}
 	
     /**
